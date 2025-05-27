@@ -2,7 +2,6 @@
 FROM ubuntu:20.04
 
 # Cài đặt các công cụ cần thiết để build MTProxy
-# Thêm `sed` để chỉnh sửa Makefile
 RUN apt-get update && \
     apt-get install -y \
         build-essential \
@@ -22,13 +21,16 @@ RUN git clone https://github.com/TelegramMessenger/MTProxy.git .
 RUN sed -i 's/LIBS = -lssl -lcrypto -lz/LIBS = -lssl -lcrypto -lz -lrt -lpthread/' Makefile
 
 # Build MTProxy
+# File thực thi sẽ nằm trong objs/bin/mtproto-proxy
 RUN make
 
 # **THÊM DÒNG NÀY ĐỂ ĐẢM BẢO FILE MTPROXY CÓ QUYỀN THỰC THI**
-RUN chmod +x ./mtproxy
+# CHÚ Ý: ĐƯỜNG DẪN ĐÃ ĐƯỢC THAY ĐỔI ĐỂ PHÙ HỢP VỚI VỊ TRÍ FILE THỰC THI
+RUN chmod +x objs/bin/mtproto-proxy
 
 # Expose cổng mặc định (443)
 EXPOSE 443
 
 # Lệnh để chạy MTProxy khi container khởi động
-CMD ["./mtproxy", "--secret", "$SECRET", "--port", "$PORT", "--nat-info", "0.0.0.0:$PORT", "--proxy-ipv6", "--max-conn", "8000", "--tag", "$TAG"]
+# CHÚ Ý: ĐƯỜNG DẪN ĐÃ ĐƯỢC THAY ĐỔI ĐỂ PHÙ HỢP VỚI VỊ TRÍ FILE THỰC THI
+CMD ["/app/objs/bin/mtproto-proxy", "--secret", "$SECRET", "--port", "$PORT", "--nat-info", "0.0.0.0:$PORT", "--proxy-ipv6", "--max-conn", "8000", "--tag", "$TAG"]
