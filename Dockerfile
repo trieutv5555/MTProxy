@@ -2,6 +2,7 @@
 FROM ubuntu:latest
 
 # Cài đặt các công cụ cần thiết để build MTProxy
+# Thêm `cmake` và `pkg-config` có thể hữu ích cho một số môi trường build
 RUN apt-get update && \
     apt-get install -y \
         build-essential \
@@ -9,7 +10,9 @@ RUN apt-get update && \
         zlib1g-dev \
         git \
         wget \
-        net-tools && \
+        net-tools \
+        cmake \
+        pkg-config && \
     rm -rf /var/lib/apt/lists/*
 
 # Clone mã nguồn MTProxy vào thư mục /app
@@ -17,7 +20,9 @@ WORKDIR /app
 RUN git clone https://github.com/TelegramMessenger/MTProxy.git .
 
 # Build MTProxy
-RUN make
+# Thêm LDFLAGS để liên kết các thư viện cần thiết: -lrt (realtime) và -lpthread (POSIX threads)
+# Đây là nguyên nhân phổ biến gây ra lỗi "ld returned 1 exit status"
+RUN make LDFLAGS="-lrt -lpthread"
 
 # Expose cổng mặc định (443)
 EXPOSE 443
