@@ -21,16 +21,16 @@ RUN git clone https://github.com/TelegramMessenger/MTProxy.git .
 RUN sed -i 's/LIBS = -lssl -lcrypto -lz/LIBS = -lssl -lcrypto -lz -lrt -lpthread/' Makefile
 
 # Build MTProxy
-# File thực thi sẽ nằm trong objs/bin/mtproto-proxy
 RUN make
 
-# **THÊM DÒNG NÀY ĐỂ ĐẢM BẢO FILE MTPROXY CÓ QUYỀN THỰC THI**
-# CHÚ Ý: ĐƯỜNG DẪN ĐÃ ĐƯỢC THAY ĐỔI ĐỂ PHÙ HỢP VỚI VỊ TRÍ FILE THỰC THI
+# Đảm bảo file mtproto-proxy có quyền thực thi
 RUN chmod +x objs/bin/mtproto-proxy
 
 # Expose cổng mặc định (443)
 EXPOSE 443
 
 # Lệnh để chạy MTProxy khi container khởi động
-# CHÚ Ý: ĐƯỜNG DẪN ĐÃ ĐƯỢC THAY ĐỔI ĐỂ PHÙ HỢP VỚI VỊ TRÍ FILE THỰC THI
-CMD ["/app/objs/bin/mtproto-proxy", "--secret", "$SECRET", "--port", "$PORT", "--nat-info", "0.0.0.0:$PORT", "--proxy-ipv6", "--max-conn", "8000", "--tag", "$TAG"]
+# ĐÃ SỬA: Thay --secret bằng --mtproto-secret hoặc -S
+# ĐÃ SỬA: Thay --tag bằng --proxy-tag hoặc -P
+# ĐÃ SỬA: Thay --port bằng -p
+CMD ["/app/objs/bin/mtproto-proxy", "--mtproto-secret", "$SECRET", "-p", "$PORT", "--nat-info", "0.0.0.0:$PORT", "--proxy-ipv6", "--max-conn", "8000", "--proxy-tag", "$TAG"]
