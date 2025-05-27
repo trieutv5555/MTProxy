@@ -1,8 +1,8 @@
-# Sử dụng image Ubuntu làm base để cài đặt các dependency cần thiết
-FROM ubuntu:latest
+# Sử dụng image Ubuntu 20.04 LTS làm base để đảm bảo môi trường ổn định
+FROM ubuntu:20.04
 
 # Cài đặt các công cụ cần thiết để build MTProxy
-# Thêm `cmake` và `pkg-config` có thể hữu ích cho một số môi trường build
+# Thêm `sed` để chỉnh sửa Makefile
 RUN apt-get update && \
     apt-get install -y \
         build-essential \
@@ -11,18 +11,21 @@ RUN apt-get update && \
         git \
         wget \
         net-tools \
-        cmake \
-        pkg-config && \
+        sed && \
     rm -rf /var/lib/apt/lists/*
 
 # Clone mã nguồn MTProxy vào thư mục /app
 WORKDIR /app
 RUN git clone https://github.com/TelegramMessenger/MTProxy.git .
 
+# **QUAN TRỌNG:** Sửa đổi Makefile để thêm -lrt và -lpthread vào biến LIBS
+# Dòng 92 trong Makefile gốc là LIBS = -lssl -lcrypto -lz
+# Lệnh sed này sẽ thêm " -lrt -lpthread" vào cuối dòng đó
+RUN sed -i 's/LIBS = -lssl -lcrypto -lz/LIBS = -lssl -lcrypto -lz -lrt -lpthread/' Makefile
+
 # Build MTProxy
-# Thêm LDFLAGS để liên kết các thư viện cần thiết: -lrt (realtime) và -lpthread (POSIX threads)
-# Đây là nguyên nhân phổ biến gây ra lỗi "ld returned 1 exit status"
-RUN make LDFLAGS="-lrt -lpthread"
+# Không cần truyền LDFLAGS nữa vì đã sửa Makefile
+RUN make
 
 # Expose cổng mặc định (443)
 EXPOSE 443
